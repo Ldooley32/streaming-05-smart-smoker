@@ -1,3 +1,16 @@
+'''Creates and sends temperatures from the smoker, and from two different pieces of meat.  
+to the queue each execution.
+This process runs and finishes.
+
+Author: Laura Dooley
+Date: June 1, 2024
+
+Approach
+---------
+one task producer 
+3 Queues - Smoker Temp, Food A temp, Food B temp 
+many workers sharing work.'''
+
 import pika
 import sys
 import webbrowser
@@ -63,19 +76,24 @@ def send_messages_from_csv(host: str, csv_file: Path):
             return
 
         # Define the column names
-        column1 = df.columns[0]
-        column2 = df.columns[1]
+        column1 = df.columns[1]
+        column2 = df.columns[2]
+        column3 = df.columns[3]
 
         # Include the header as the first message
-        send_message(host, "task_queue2", column1)
-        send_message(host, "task_queue3", column2)
+        send_message(host, "temp_queue1", column1)
+        send_message(host, "temp_queue2", column2)
+        send_message(host, "temp_queue3", column3)
 
         # Iterate over each row in the DataFrame and send the messages
         for index, row in df.iterrows():
             message1 = row[column1]
             message2 = row[column2]
-            send_message(host, "task_queue2", str(message1))
-            send_message(host, "task_queue3", str(message2))
+            message3 = row[column3]
+            send_message(host, "temp_queue1", str(message1))
+            send_message(host, "temp_queue2", str(message2))
+            send_message(host, "temp_queue3", str(message3))
+    
     except Exception as e:
         print(f"Error reading CSV file: {e}")
 
@@ -88,7 +106,7 @@ if __name__ == "__main__":
     offer_rabbitmq_admin_site()
 
     # Set the CSV file path
-    csv_file = Path("bonus.csv")
+    csv_file = Path("smoker-temps.csv")
 
     # Send the messages from the CSV file to the respective queues
     send_messages_from_csv("localhost", csv_file)
