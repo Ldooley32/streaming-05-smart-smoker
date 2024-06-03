@@ -15,6 +15,7 @@ import pika
 import sys
 import webbrowser
 import pandas as pd
+import time
 from pathlib import Path
 
 def offer_rabbitmq_admin_site():
@@ -70,30 +71,24 @@ def send_messages_from_csv(host: str, csv_file: Path):
         # Read the CSV file into a DataFrame
         df = pd.read_csv(csv_file)
 
-        # Check if the DataFrame has at least two columns
-        if df.shape[1] < 2:
-            print("Error: CSV file does not have at least two columns")
-            return
-
-        # Define the column names
-        column1 = df.columns[1]
-        column2 = df.columns[2]
-        column3 = df.columns[3]
-
-        # Include the header as the first message
-        send_message(host, "temp_queue1", column1)
-        send_message(host, "temp_queue2", column2)
-        send_message(host, "temp_queue3", column3)
-
         # Iterate over each row in the DataFrame and send the messages
         for index, row in df.iterrows():
-            message1 = row[column1]
-            message2 = row[column2]
-            message3 = row[column3]
-            send_message(host, "temp_queue1", str(message1))
-            send_message(host, "temp_queue2", str(message2))
-            send_message(host, "temp_queue3", str(message3))
-    
+            timestamp = row[0]
+            smoker_temp = row[1]
+            food_a_temp = row[2]
+            food_b_temp = row[3]
+
+            # Check if the temperature values are prersent before sending
+            if not pd.isna(smoker_temp):
+                send_message(host, "smoker_queue", f"{timestamp}, Smoker Temp = {smoker_temp}")
+            if not pd.isna(food_a_temp):
+                send_message(host, "food_a_queue", f"{timestamp}, Food A Temp = {food_a_temp}")
+            if not pd.isna(food_b_temp):
+                send_message(host, "food_b_queue", f"{timestamp}, Food B Temp = {food_b_temp}")
+
+            # Sleep for 30 seconds
+            time.sleep(30)
+   
     except Exception as e:
         print(f"Error reading CSV file: {e}")
 
