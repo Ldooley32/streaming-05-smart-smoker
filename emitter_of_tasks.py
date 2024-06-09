@@ -14,9 +14,11 @@ many workers sharing work.'''
 import pika
 import sys
 import webbrowser
-import pandas as pd
 import time
+import datetime
+import pandas as pd
 from pathlib import Path
+
 
 def offer_rabbitmq_admin_site():
     """Offer to open the RabbitMQ Admin website"""
@@ -25,6 +27,7 @@ def offer_rabbitmq_admin_site():
     if ans.lower() == "y":
         webbrowser.open_new("http://localhost:15672/#/queues")
         print()
+
 
 def send_message(host: str, queue_name: str, message: str):
     """
@@ -58,6 +61,7 @@ def send_message(host: str, queue_name: str, message: str):
         # close the connection to the server
         conn.close()
 
+
 def send_messages_from_csv(host: str, csv_file: Path):
     """
     Read messages from a multi-column CSV file and send each column's messages
@@ -73,22 +77,25 @@ def send_messages_from_csv(host: str, csv_file: Path):
 
         # Iterate over each row in the DataFrame and send the messages
         for index, row in df.iterrows():
-            timestamp = row[0]
+            date_time = row[0]
             smoker_temp = row[1]
             food_a_temp = row[2]
             food_b_temp = row[3]
 
+            #include a timestamp with message
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             # Check if the temperature values are prersent before sending
             if not pd.isna(smoker_temp):
-                send_message(host, "smoker_queue", f"{timestamp}, Smoker Temp = {smoker_temp}")
+                send_message(host, "smoker_queue", f" {timestamp}, {date_time}, Smoker Temp = {smoker_temp}")
             if not pd.isna(food_a_temp):
-                send_message(host, "food_a_queue", f"{timestamp}, Food A Temp = {food_a_temp}")
+                send_message(host, "food_a_queue", f" {timestamp}, {date_time}, Food A Temp = {food_a_temp}")
             if not pd.isna(food_b_temp):
-                send_message(host, "food_b_queue", f"{timestamp}, Food B Temp = {food_b_temp}")
+                send_message(host, "food_b_queue", f" {timestamp}, {date_time}, Food B Temp = {food_b_temp}")
 
-            # Sleep for 30 seconds
+            # sleep for 30 sec to simulate work
             time.sleep(30)
-   
+    
     except Exception as e:
         print(f"Error reading CSV file: {e}")
 
@@ -96,6 +103,8 @@ def send_messages_from_csv(host: str, csv_file: Path):
 # This allows us to import this module and use its functions
 # without executing the code below.
 # If this is the program being run, then execute the code below
+
+
 if __name__ == "__main__":  
     # ask the user if they'd like to open the RabbitMQ Admin site
     offer_rabbitmq_admin_site()
