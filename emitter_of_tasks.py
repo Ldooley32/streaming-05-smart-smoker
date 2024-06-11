@@ -99,7 +99,7 @@ def send_messages_from_csv(host: str, csv_file: Path):
     except Exception as e:
         print(f"Error reading CSV file: {e}")
 
-# Standard Python idiom to indicate main program entry pt
+# Standard Python idiom to indicate main program entry point
 # This allows us to import this module and use its functions
 # without executing the code below.
 # If this is the program being run, then execute the code below
